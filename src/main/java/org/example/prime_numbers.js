@@ -20,7 +20,7 @@ class DivisibleByFilter {
     }
 }
 
-class Primes {
+class Prime_numbers {
     constructor() {
         this.number = 2;
         this.filter = new AcceptFilter();
@@ -33,7 +33,7 @@ class Primes {
         return this.number;
         }
 }
-var primes = new Primes();
+var primes = new Prime_numbers();
 var primesArray = [];
 for (let i = 0; i < 5000; i++) {
     primesArray.push(primes.next());

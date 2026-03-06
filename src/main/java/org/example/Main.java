@@ -1,80 +1,104 @@
 package org.example;
+
 import org.graalvm.polyglot.Context;
-import org.graalvm.polyglot.Value;
-import java.util.Set;
 import org.graalvm.polyglot.Source;
-import java.nio.file.Path;
+import org.graalvm.polyglot.Value;
+
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Scanner;
 
 public class Main {
+
+    private static final String BASE_PATH = "src/main/java/org/example/";
+
     public static void main(String[] args) throws Exception {
-//        Path jsPath = Path.of("src/main/java/org/example/primes.js");
-//        String jsCode = Files.readString(jsPath);
+        Scanner scanner = new Scanner(System.in);
 
-//        Path pyPath = Path.of("src/main/java/org/example/primes.py");
-//        String pyCode = Files.readString(pyPath);
+        System.out.println("Alege o optiune:");
+        System.out.println("1. Ruleaza prime_numbers.js");
+        System.out.println("2. Ruleaza prime_numbers.py");
+        System.out.println("3. Ruleaza generate_list.py");
+        System.out.println("4. Ruleaza generate_list.py + show_list.js + sort_list.py");
+        System.out.println("5. Ruleaza linear_regression.py");
+        System.out.print("Optiunea ta: ");
 
-        Path pyPath = Path.of("src/main/java/org/example/random.py");
-        String pyCode = Files.readString(pyPath);
+        int option = scanner.nextInt();
 
+        switch (option) {
+            case 1:
+                runJavaScript("prime_numbers.js");
+                break;
+            case 2:
+                runPython("prime_numbers.py");
+                break;
+            case 3:
+                runPython("generate_list.py");
+                break;
+            case 4:
+                runPythonAndJavaScript("generate_list.py", "show_list.js", "sort_list.py");
+                break;
+            case 5:
+                runPython("linear_regression.py");
+                break;
+            default:
+                System.out.println("Optiune invalida.");
+        }
 
-        Path jsPath = Path.of("src/main/java/org/example/showList.js");
-        String jsCode = Files.readString(jsPath);
+        scanner.close();
+    }
 
-//        System.out.println("Asteptam executarea codului JavaScript");
-//        try (Context context = Context.newBuilder("js").allowAllAccess(true).build()) {
-//            context.eval(Source.newBuilder("js", jsCode, "primes.js").build());
-//        }
+    private static void runJavaScript(String fileName) throws Exception {
+        System.out.println("Executam JavaScript: " + fileName);
 
-//        System.out.println("Asteptam executarea codului Python... ");
-//        try(Context context = Context.newBuilder("python").allowAllAccess(true).build() ) {
-//            context.eval(Source.newBuilder("python", pyCode, "primes.py").build());
-//        }
+        String code = readFile(fileName);
 
-//        System.out.println("Asteptam executarea codului Python... ");
-//        try(Context context = Context.newBuilder("python").allowAllAccess(true).build() ) {
-//            context.eval(Source.newBuilder("python", pyCode, "random.py").build());
-//        }
+        try (Context context = Context.newBuilder("js")
+                .allowAllAccess(true)
+                .build()) {
 
+            context.eval(Source.newBuilder("js", code, fileName).build());
+        }
+    }
 
+    private static void runPython(String fileName) throws Exception {
+        System.out.println("Executam Python: " + fileName);
 
-//        try(Context context = Context.newBuilder().allowAllAccess(true).build())
-//        {
-//            Value pyBindings = context.getBindings("python");
-//            context.eval(Source.newBuilder("python", pyCode, "random.py").build());
-//            Value lista = pyBindings.getMember("lista");
-//
-//            context.getBindings("js").putMember("lista", lista);
-//            context.eval("js", jsCode);
-//
-//
-//            context.getBindings("python").putMember("lista", lista);
-//            String sortPy = Files.readString(Path.of("src/main/java/org/example/sortList.py"));
-//            context.eval("python", sortPy);
-//
-//        }
+        String code = readFile(fileName);
 
+        try (Context context = Context.newBuilder("python")
+                .allowAllAccess(true)
+                .build()) {
 
-//        try(Context context = Context.newBuilder().allowAllAccess(true).build()) {
-//            context.eval(Source.newBuilder("python", Files.readString(Path.of("src/main/java/org/example/primes.py")), "primes.py").build());
-//
-//        }
+            context.eval(Source.newBuilder("python", code, fileName).build());
+        }
+    }
+
+    private static void runPythonAndJavaScript(String pythonFile, String jsFile, String sortPythonFile) throws Exception {
+        System.out.println("Executam fisiere combinate: " + pythonFile + ", " + jsFile + ", " + sortPythonFile);
+
+        String pythonCode = readFile(pythonFile);
+        String jsCode = readFile(jsFile);
+        String sortPythonCode = readFile(sortPythonFile);
 
         try (Context context = Context.newBuilder()
                 .allowAllAccess(true)
                 .build()) {
 
-            context.eval(
-                    Source.newBuilder(
-                            "python",
-                            Files.readString(
-                                    Path.of("src/main/java/org/example/Ex2.py")),
-                            "Ex2.py"
-                    ).build()
-            );
+            context.eval(Source.newBuilder("python", pythonCode, pythonFile).build());
+
+            Value pythonBindings = context.getBindings("python");
+            Value lista = pythonBindings.getMember("lista");
+
+            context.getBindings("js").putMember("lista", lista);
+            context.eval("js", jsCode);
+
+            context.getBindings("python").putMember("lista", lista);
+            context.eval("python", sortPythonCode);
         }
+    }
 
-
-
+    private static String readFile(String fileName) throws Exception {
+        return Files.readString(Path.of(BASE_PATH + fileName));
     }
 }
